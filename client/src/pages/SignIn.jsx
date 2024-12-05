@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { signInStart, signInSuccess, signInFail } from '../redux/userSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import OAuth from './OAuth';
 
 const SignIn = () => {
 
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState({});
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const {error, loading} = useSelector(store => store.user);
+  console.log('error: '+error+" loading: "+loading);
   const navigate = useNavigate();
 
   const handleChange = (e)=>{
@@ -14,7 +18,7 @@ const SignIn = () => {
 
   const hadleSubmit = async (e)=>{
     e.preventDefault();
-    setLoading(true);
+    dispatch(signInStart());
     const res = await fetch('/api/auth/signin',{
       method: "POST",
       headers:{
@@ -25,14 +29,13 @@ const SignIn = () => {
     const data = await res.json();
     if(data.sucess === false)
     {
-      setError(data.message);
+      dispatch(signInFail(data.message));
     }
     else
     {
-      setError(null);
+      dispatch(signInSuccess(data));
       navigate('/home');
     }
-    setLoading(false);
   }
 
   return (
@@ -42,12 +45,12 @@ const SignIn = () => {
         <input onChange={handleChange} type="email" placeholder='email' id='email' className='border border-slate-200 p-3 rounded-lg outline-slate-300 bg-transparent'/>
         <input onChange={handleChange} type="password" minLength='5' placeholder='password' id='password' className='border border-slate-200 p-3 rounded-lg outline-slate-300 bg-transparent'/>
         {error ? <p className='text-red-600 font-medium text-center'>{error}</p> : null}
-        <button disabled={loading} className='bg-slate-700 text-white p-2 font-medium rounded-lg uppercase hover:opacity-95 disabled:opacity-70 disabled:cursor-not-allowed mt-4'>{loading ? 'authenticating.....' : 'Sign In'}</button>
-        <button disabled={loading} className='bg-green-700 text-white p-2 font-medium rounded-lg uppercase hover:opacity-95 disabled:opacity-70 disabled:cursor-not-allowed'>Continue with google</button>
+        <button disabled={loading} className='bg-slate-700 text-white p-2 rounded-lg uppercase hover:opacity-95 disabled:opacity-70 disabled:cursor-not-allowed mt-4'>{loading ? 'authenticating.....' : 'Sign Up'}</button>
+        <OAuth></OAuth>
         <p className=''>Dont have an account? <Link to={'/sign-up'} className='text-blue-800 hover:underline underline-offset-2'>Sign-Up</Link> instead</p>
       </form>
     </div>
   )
 }
 
-export default SignIn
+export default SignIn;
